@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container mx-5 p-3">
+        <h1>Add Your TODO List</h1>
+        <form action="/addTodo" method="post" class="my-4">
+            <input type="text" placeholder="Enter your todo" name="todo">
+            <button type="submit">Add TODO</button>
+        </form>
+        <div id="container"></div>
+        <div id="update"></div>
+    </div>
+
+    <script>
+        function loadTodos() {
+            fetch("/todos")
+                .then(response => response.json())
+                .then(todo => {
+                    const container = document.getElementById("container")
+                    container.innerHTML = '';
+                    todo.forEach(pd => {
+                        const p = document.createElement("p")
+                        p.innerHTML = `${pd.todo}
+                <button onclick="loadSingleTodo('${pd._id}')">update</button>
+                    <button onclick="deleteTodo(event, '${pd._id}')">delete</button>
+                `
+                        container.appendChild(p)
+                    })
+                })
+        }
+        loadTodos()
+
+        function loadSingleTodo(id) {
+            fetch(`todo/${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    const update = document.getElementById('update');
+                    update.innerHTML = `
+                    <h3>Update: ${data._id}</h3>
+                    <input type="text" value="${data.todo}" id="todoName"></input>
+                    <button onclick="updateTodo('${data._id}')">submit</button>
+                `
+                })
+        }
+
+        function updateTodo(id) {
+            const todo = document.getElementById('todoName').value;
+            const product = { id, todo };
+            fetch(`/update/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(product)
+            })
+                .then(response => response.json())
+                .then(result => {
+                    if (result) {
+                        loadTodos()
+                        document.getElementById('update').innerHTML = '';
+                    }
+                })
+        }
+
+        function deleteTodo(event, id) {
+            fetch(`/delete/${id}`, {
+                method: 'DELETE'
+            })
+                .then(response => response.json())
+                .then(result => {
+                    if (result) {
+                        event.target.parentNode.style.display = 'none';
+                    }
+                })
+        }
+
+    </script>
+</body>
+
+</html>
